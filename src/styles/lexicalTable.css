@@ -1,0 +1,221 @@
+/* Wrapper for scrollable tables */
+.scribe_lexical_tableScrollableWrapper {
+    overflow-x: auto;
+    margin: 0px 25px 30px 0px;
+  }
+  
+  .scribe_lexical_tableScrollableWrapper > .scribe_lexical_table {
+    /* Remove the table's margin and put it on the wrapper */
+    margin: 0;
+  }
+  
+  /* Main table styles */
+  .scribe_lexical_table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    overflow-y: scroll;
+    overflow-x: scroll;
+    table-layout: fixed;
+    margin: 0px 25px 30px 0px;
+    font-size: 14px;
+  }
+  
+  /* Striped rows for better readability */
+  .scribe_lexical_tableRowStriping tr:nth-child(even) {
+    background-color: #f2f5fb;
+  }
+  
+  /* Selection styles */
+  .scribe_lexical_tableSelection *::selection {
+    background-color: transparent;
+  }
+  
+  .scribe_lexical_tableSelected {
+    outline: 2px solid rgb(60, 132, 244);
+  }
+  
+  /* Table cell styles */
+  .scribe_lexical_tableCell {
+    border: 1px solid #bbb;
+    min-width: 75px;
+    vertical-align: top;
+    text-align: start;
+    padding: 6px 8px;
+    position: relative;
+    outline: none;
+    transition: background-color 0.2s ease;
+  }
+  
+  /* Table cell indicators */
+  .scribe_lexical_tableCellSortedIndicator {
+    display: block;
+    opacity: 0.5;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background-color: #999;
+  }
+  
+  /* Cell resizer handle */
+  .scribe_lexical_tableCellResizer {
+    position: absolute;
+    right: -4px;
+    height: 100%;
+    width: 8px;
+    cursor: ew-resize;
+    z-index: 10;
+    top: 0;
+  }
+
+  /* Header cell styles */
+  .scribe_lexical_tableCellHeader {
+    background-color: #f2f3f5;
+    text-align: start;
+    font-weight: bold;
+    min-width:100px;
+  }
+  
+  /* Selection states */
+  .scribe_lexical_tableCellSelected {
+    background-color: rgba(201, 219, 240, 0.5);
+  }
+  
+  .scribe_lexical_tableCellPrimarySelected {
+    border: 2px solid rgb(60, 132, 244);
+    display: block;
+    height: calc(100% - 2px);
+    position: absolute;
+    width: calc(100% - 2px);
+    left: -1px;
+    top: -1px;
+    z-index: 2;
+  }
+  
+  /* Cell editing state */
+  .scribe_lexical_tableCellEditing {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+    border-radius: 3px;
+  }
+  
+  /* Button to add columns and rows */
+  .scribe_lexical_tableAddColumns {
+    position: absolute;
+    background-color: #eee;
+    height: 100%;
+    animation: table-controls 0.2s ease;
+    border: 0;
+    cursor: pointer;
+  }
+  
+  .scribe_lexical_tableAddColumns:after {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/></svg>');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: block;
+    content: ' ';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.4;
+  }
+  
+  .scribe_lexical_tableAddRows {
+    position: absolute;
+    width: calc(100% - 25px);
+    background-color: #eee;
+    animation: table-controls 0.2s ease;
+    border: 0;
+    cursor: pointer;
+  }
+  
+  .scribe_lexical_tableAddRows:after {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/></svg>');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: block;
+    content: ' ';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.4;
+  }
+  
+  .scribe_lexical_tableAddColumns:hover,
+  .scribe_lexical_tableAddRows:hover {
+    background-color: #c9dbf0;
+  }
+  
+  @keyframes table-controls {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  
+  /* Resize ruler */
+  .scribe_lexical_tableCellResizeRuler {
+    display: block;
+    position: absolute;
+    width: 1px;
+    background-color: rgb(60, 132, 244);
+    height: 100%;
+    top: 0;
+  }
+  
+  /* Cell action button container and styling */
+  .scribe_lexical_tableCellActionButtonContainer {
+    display: block;
+    right: 5px;
+    top: 6px;
+    position: absolute;
+    z-index: 4;
+    width: 20px;
+    height: 20px;
+  }
+  
+  .scribe_lexical_tableCellActionButton {
+    background-color: #eee;
+    display: block;
+    border: 0;
+    border-radius: 20px;
+    width: 20px;
+    height: 20px;
+    color: #222;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .scribe_lexical_tableCellActionButton:hover {
+    background-color: #ddd;
+  }
+  
+  /* Hover effects for better UX */
+  .scribe_lexical_tableCell:hover .scribe_lexical_tableCellActionButton {
+    opacity: 1;
+  }
+  
+  .scribe_lexical_tableCell:hover {
+    box-shadow: 0 0 0 1px rgba(60, 132, 244, 0.3);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .scribe_lexical_table {
+      margin: 0px 15px 20px 0px;
+    }
+    
+    .scribe_lexical_tableCell {
+      padding: 4px 6px;
+      font-size: 13px;
+    }
+  }
