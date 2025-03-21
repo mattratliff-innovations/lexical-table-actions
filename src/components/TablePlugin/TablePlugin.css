@@ -46,12 +46,19 @@
 }
 
 /* Table cell action menu styles */
+.table-cell-action-menu-wrapper {
+  position: relative;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
 .table-cell-action-button-container {
   position: absolute;
-  top: 0;
-  left: 0;
-  will-change: transform;
-  z-index: 10;
+  top: 5px;
+  right: 5px;
+  z-index: 100;
+  pointer-events: auto;
 }
   
 .table-cell-action-button {
@@ -84,13 +91,13 @@ i.chevron-down {
 
 .table-actions-dropdown {
   z-index: 100;
-  display: block;
   position: absolute;
   box-shadow: 0 12px 28px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.1),
     inset 0 0 0 1px rgba(255, 255, 255, 0.5);
   border-radius: 8px;
   min-width: 180px;
   background-color: #fff;
+  pointer-events: auto;
 }
   
 .table-actions-dropdown .item {
@@ -108,7 +115,7 @@ i.chevron-down {
   background-color: #fff;
   border-radius: 8px;
   border: 0;
-  width: 100%;
+  width: calc(100% - 16px);
   text-align: left;
 }
 
@@ -127,7 +134,7 @@ i.chevron-down {
   background-color: #fff;
   border-radius: 8px;
   border: 0;
-  width: 100%;
+  width: calc(100% - 16px);
   text-align: left;
 }
   

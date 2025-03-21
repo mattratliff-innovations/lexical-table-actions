@@ -5,6 +5,7 @@ import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { TablePlugin } from '@lexical/react/LexicalTablePlugin';
+import './TablePlugin/TablePlugin.css';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import ToolbarPlugin from '../components/ToolbarPlugin';
 import TableActionMenuPlugin from '../components/TableCellActionMenu/TableActionMenuPlugin';
@@ -47,7 +48,7 @@ function Editor() {
             <HistoryPlugin />
             <ListPlugin />
             <TablePlugin />
-            {editorReady && <TableActionMenuPlugin anchorElem={document.body} />}
+            {editorReady && <TableActionMenuPlugin />}
             <OnChangePlugin onChange={(editorState) => {
               editorState.read(() => {
                 // Optional: Save content to localStorage or handle changes

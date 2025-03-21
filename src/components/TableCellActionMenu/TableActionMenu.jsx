@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, memo } from 'react';
-import { createPortal } from 'react-dom';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $deleteTableColumn__EXPERIMENTAL,
@@ -62,6 +61,7 @@ function TableActionMenu({
   onClose,
   tableCellNode,
   contextRef,
+  tableCellDOMNode,
 }) {
   const [editor] = useLexicalComposerContext();
   const dropDownRef = useRef(null);
@@ -183,49 +183,62 @@ function TableActionMenu({
     const calculatePosition = () => {
       const menuButton = contextRef.current;
       const dropDown = dropDownRef.current;
-      if (!menuButton || !dropDown) {
+      if (!menuButton || !dropDown || !tableCellDOMNode) {
         return;
       }
 
       const MARGIN = 5;
-      const { right, left, top, bottom } = menuButton.getBoundingClientRect();
+      const buttonRect = menuButton.getBoundingClientRect();
       const dropDownRect = dropDown.getBoundingClientRect();
-      const scrollX = window.pageXOffset;
-      const scrollY = window.pageYOffset;
+      const tableCellRect = tableCellDOMNode.getBoundingClientRect();
+      
+      // Get the scroll position
+      const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+      const scrollY = window.pageYOffset || document.documentElement.scrollTop;
 
-      // Calculate left position
-      let leftPosition = right + MARGIN;
-      const exceedsRight = leftPosition + dropDownRect.width > window.innerWidth;
+      // Start with positioning to the right of the button
+      let leftPosition = buttonRect.right + MARGIN;
+      let topPosition = buttonRect.top;
 
-      if (exceedsRight) {
-        const alternateLeft = left - dropDownRect.width - MARGIN;
-        leftPosition = Math.max(MARGIN, alternateLeft) + scrollX;
+      // Check if the menu would go off the right edge of the viewport
+      if (leftPosition + dropDownRect.width > window.innerWidth + scrollX) {
+        // Position to the left of the button instead
+        leftPosition = buttonRect.left - dropDownRect.width - MARGIN;
+        
+        // If still off-screen, position relative to the table cell
+        if (leftPosition < scrollX) {
+          leftPosition = Math.max(scrollX, tableCellRect.left);
+        }
       }
 
-      // Calculate top position
-      let topPosition = top;
-      const exceedsBottom = topPosition + dropDownRect.height > window.innerHeight;
-
-      if (exceedsBottom) {
-        const alternateTop = bottom - dropDownRect.height;
-        topPosition = Math.max(MARGIN, alternateTop) + scrollY;
+      // Check if the menu would go off the bottom of the viewport
+      if (topPosition + dropDownRect.height > window.innerHeight + scrollY) {
+        // Position the menu above the button
+        topPosition = Math.max(scrollY, buttonRect.top - dropDownRect.height);
       }
 
       // Apply positions
       Object.assign(dropDown.style, {
         opacity: '1',
+        position: 'fixed',
         left: `${leftPosition}px`,
-        top: `${topPosition + scrollY}px`,
+        top: `${topPosition}px`,
+        zIndex: '9999'
       });
     };
 
-    // Initial position calculation
-    calculatePosition();
+    // Initial position calculation after a brief delay to ensure render
+    setTimeout(calculatePosition, 0);
 
-    // Recalculate on resize
+    // Recalculate on resize and scroll
     window.addEventListener('resize', calculatePosition);
-    return () => window.removeEventListener('resize', calculatePosition);
-  }, [contextRef, dropDownRef]);
+    window.addEventListener('scroll', calculatePosition);
+    
+    return () => {
+      window.removeEventListener('resize', calculatePosition);
+      window.removeEventListener('scroll', calculatePosition);
+    };
+  }, [contextRef, dropDownRef, tableCellDOMNode]);
 
   const menuItems = [
     {
@@ -305,7 +318,7 @@ function TableActionMenu({
     },
   ];
 
-  const menu = (
+  return (
     <div
       className="table-actions-dropdown"
       id="table-actions"
@@ -330,8 +343,6 @@ function TableActionMenu({
       )))}
     </div>
   );
-
-  return createPortal(menu, document.body);
 }
 
 export default memo(TableActionMenu);
