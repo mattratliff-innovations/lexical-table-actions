@@ -11,6 +11,7 @@ import {
   SELECTION_CHANGE_COMMAND,
   COMMAND_PRIORITY_LOW,
 } from 'lexical';
+import { createPortal } from 'react-dom';
 import TableActionMenu from './TableActionMenu';
 
 // ChevronButton component
@@ -115,65 +116,123 @@ const useTableCellNode = (editor) => {
   return { tableCellNode, tableCellDOMNode };
 };
 
-// Hook to position the menu button relative to the table cell
-const useMenuPosition = (menuButtonRef, tableCellDOMNode) => {
+// The main TableCellActionMenuContainer component
+function TableCellActionMenuContainer() {
+  const [editor] = useLexicalComposerContext();
+  const menuRootRef = useRef(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const buttonContainerRef = useRef(null);
+  const previousCellRef = useRef(null);
+
+  const { tableCellNode, tableCellDOMNode } = useTableCellNode(editor);
+
+  // Clean up previous button container when cell changes
   useEffect(() => {
-    const menuButton = menuButtonRef.current;
-    if (!menuButton || !tableCellDOMNode) {
-      // If we don't have valid elements, hide the button
-      if (menuButton) {
-        menuButton.style.opacity = '0';
+    return () => {
+      // Clean up any orphaned button containers on unmount
+      if (buttonContainerRef.current && buttonContainerRef.current.parentElement) {
+        try {
+          buttonContainerRef.current.parentElement.removeChild(buttonContainerRef.current);
+        } catch (e) {
+          // Handle possible errors if node is already removed
+          console.log('Cleanup attempt - node may already be removed');
+        }
       }
+    };
+  }, []);
+
+  // Handle DOM manipulation directly instead of using createPortal
+  useEffect(() => {
+    if (!tableCellDOMNode) {
       return;
     }
 
-    // Function to calculate and update the position
-    const updatePosition = () => {
-      const tableCellRect = tableCellDOMNode.getBoundingClientRect();
+    const addButtonToCell = () => {
+      // If the cell changes, clean up the previous button
+      if (previousCellRef.current && previousCellRef.current !== tableCellDOMNode) {
+        const existingButton = previousCellRef.current.querySelector('.table-cell-action-button-container');
+        if (existingButton) {
+          try {
+            previousCellRef.current.removeChild(existingButton);
+          } catch (e) {
+            console.log('Previous cell cleanup attempt');
+          }
+        }
+      }
+
+      // Create a new button container if it doesn't exist in the current cell
+      let buttonContainer = tableCellDOMNode.querySelector('.table-cell-action-button-container');
       
-      // Position in the top-right corner of the cell
-      menuButton.style.opacity = '1';
-      menuButton.style.position = 'absolute';
-      menuButton.style.top = '5px';
-      menuButton.style.right = '5px';
-      menuButton.style.left = 'auto';
-      menuButton.style.transform = 'none';
-      menuButton.style.zIndex = '10';
+      if (!buttonContainer) {
+        buttonContainer = document.createElement('div');
+        buttonContainer.className = 'table-cell-action-button-container';
+        buttonContainer.style.position = 'absolute';
+        buttonContainer.style.top = '5px';
+        buttonContainer.style.right = '5px';
+        buttonContainer.style.zIndex = '10';
+        
+        // Create button element
+        const button = document.createElement('button');
+        button.className = 'table-cell-action-button';
+        button.setAttribute('aria-label', 'Table actions');
+        button.setAttribute('type', 'button');
+        button.setAttribute('id', 'table-cell-action-button-' + Date.now()); // Unique ID
+        
+        // Create chevron icon
+        const icon = document.createElement('i');
+        icon.className = 'chevron-down';
+        
+        // Add click handler using a more persistent approach
+        const handleButtonClick = (e) => {
+          e.stopPropagation();
+          setIsMenuOpen(prev => !prev);
+        };
+        
+        button.addEventListener('click', handleButtonClick);
+        
+        // Assemble and append
+        button.appendChild(icon);
+        buttonContainer.appendChild(button);
+        tableCellDOMNode.appendChild(buttonContainer);
+        
+        // Store references
+        buttonContainerRef.current = buttonContainer;
+        menuRootRef.current = button;
+      } else {
+        // Update references if button already exists
+        menuRootRef.current = buttonContainer.querySelector('button');
+      }
+      
+      // Update the previous cell reference
+      previousCellRef.current = tableCellDOMNode;
     };
-    
-    // Initial positioning
-    updatePosition();
-    
-    // Set up a mutation observer to watch for changes in the table cell
-    const observer = new MutationObserver(updatePosition);
-    observer.observe(tableCellDOMNode, { 
-      attributes: true, 
-      childList: true, 
-      subtree: true 
+
+    // Initial creation
+    addButtonToCell();
+
+    // Add an observer to ensure the button remains in the cell
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          const buttonExists = tableCellDOMNode.querySelector('.table-cell-action-button-container');
+          if (!buttonExists && tableCellDOMNode) {
+            // If button was removed, add it back
+            addButtonToCell();
+          }
+        }
+      }
     });
+
+    // Start observing the cell for changes to its children
+    observer.observe(tableCellDOMNode, { childList: true });
     
-    // Handle window resize events
-    window.addEventListener('resize', updatePosition);
-    
-    // Cleanup function
+    // Clean up function
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', updatePosition);
+      // We don't remove the button here to avoid the 'removeChild' error
+      // Buttons will be cleaned up when switching cells
     };
-  }, [menuButtonRef, tableCellDOMNode]);
-};
-
-  // The main TableCellActionMenuContainer component
-function TableCellActionMenuContainer() {
-  const [editor] = useLexicalComposerContext();
-  const menuButtonRef = useRef(null);
-  const menuRootRef = useRef(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const { tableCellNode, tableCellDOMNode } = useTableCellNode(editor);
-  
-  // Always call hooks unconditionally
-  useMenuPosition(menuButtonRef, tableCellDOMNode);
+  }, [tableCellDOMNode]);
 
   // Close menu with Escape key
   useEffect(() => {
@@ -187,7 +246,7 @@ function TableCellActionMenuContainer() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [setIsMenuOpen]);
+  }, []);
 
   // Close menu when cell changes
   const prevTableCellRef = useRef(tableCellNode);
@@ -200,30 +259,15 @@ function TableCellActionMenuContainer() {
 
   if (!tableCellNode || !tableCellDOMNode) return null;
 
-  return (
-    <div className="table-cell-action-menu-wrapper">
-      <div 
-        className="table-cell-action-button-container" 
-        ref={menuButtonRef}
-      >
-        <ChevronButton
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsMenuOpen(!isMenuOpen);
-          }}
-          menuRootRef={menuRootRef}
-        />
-        {isMenuOpen && (
-          <TableActionMenu
-            contextRef={menuRootRef}
-            onClose={() => setIsMenuOpen(false)}
-            tableCellNode={tableCellNode}
-            tableCellDOMNode={tableCellDOMNode}
-          />
-        )}
-      </div>
-    </div>
-  );
+  // Only render the menu, the button is handled by DOM manipulation
+  return isMenuOpen ? (
+    <TableActionMenu
+      contextRef={menuRootRef}
+      onClose={() => setIsMenuOpen(false)}
+      tableCellNode={tableCellNode}
+      tableCellDOMNode={tableCellDOMNode}
+    />
+  ) : null;
 }
 
 export default memo(TableCellActionMenuContainer);

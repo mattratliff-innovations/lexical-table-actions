@@ -47,7 +47,9 @@
 
 /* Table cell action menu styles */
 .table-cell-action-menu-wrapper {
-  position: relative;
+  position: absolute;
+  top:200px;
+  left:800px;
   width: 0;
   height: 0;
   pointer-events: none;
